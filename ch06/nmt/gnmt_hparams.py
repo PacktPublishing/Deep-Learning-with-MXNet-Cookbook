@@ -10,7 +10,7 @@ lp_k = 5
 bleu = '13a'
 
 # Hyper-parameters for training
-batch_size, test_batch_size = 128, 32
+batch_size, test_batch_size = 64, 32
 num_buckets = 5
 epochs = 1
 clip = 5
