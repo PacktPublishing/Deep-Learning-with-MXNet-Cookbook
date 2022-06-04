@@ -104,20 +104,24 @@ def translate(translator, src_seq, src_vocab, tgt_vocab, detokenizer, ctx):
     src_nd = mx.nd.array(src_npy)
     src_nd = src_nd.reshape((1, -1)).as_in_context(ctx)
     src_valid_length = mx.nd.array([src_nd.shape[1]]).as_in_context(ctx)
+    
     samples, _, sample_valid_length = \
         translator.translate(src_seq=src_nd, src_valid_length=src_valid_length)
     max_score_sample = samples[:, 0, :].asnumpy()
     
     sample_valid_length = sample_valid_length[:, 0].asnumpy()
     translation_out = []
+    
     for i in range(max_score_sample.shape[0]):
         translation_out.append(
             [tgt_vocab.idx_to_token[ele] for ele in
              max_score_sample[i][1:(sample_valid_length[i] - 1)]])
     real_translation_out = [None for _ in range(len(translation_out))]
+    
     for ind, sentence in enumerate(translation_out):
         real_translation_out[ind] = detokenizer(bleu._bpe_to_words(sentence),
                                                 return_str=True)
+    
     return real_translation_out              
 
 def train(model, train_data_loader, valid_data_loader, loss_function, trainer, translator,
