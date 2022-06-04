@@ -19,5 +19,4 @@
 
 # pylint: disable=wildcard-import
 """NMT example."""
-from . import _constants, bleu, dataset, \
-              gnmt, translation, utils
+from . import bleu, dataset, gnmt, translation, utils
