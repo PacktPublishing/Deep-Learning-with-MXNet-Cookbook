@@ -153,7 +153,7 @@ def train(model, train_data_loader, valid_data_loader, loss_function, trainer, t
                 loss = loss * (tgt_seq.shape[1] - 1) / (tgt_valid_length - 1).mean()
                 loss.backward()
 
-            grads = [p.grad(ctx) for p in model.collect_params().values()]
+            grads = [p.grad(ctx) for p in model.collect_params().values() if p.grad_req != "null"]
             gnorm = mx.gluon.utils.clip_global_norm(grads, hparams.clip)
             trainer.step(1)
             src_wc = src_valid_length.sum().asscalar()

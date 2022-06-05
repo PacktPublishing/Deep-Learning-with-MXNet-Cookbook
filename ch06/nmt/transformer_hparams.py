@@ -33,10 +33,12 @@ bleu = "13a"
 
 # Hyper-parameters for training
 epochs = 3
-batch_size = 2700
-test_batch_size = 256
+batch_size = 64
+test_batch_size = 64
 num_accumulated = 1
-lr = 2
+lr = 0.01
+lr_update_factor = 0.5
+clip = 5
 warmup_steps = 1
 file_name = "transformer_en_de_512.params"
 average_start = 1
