@@ -26,7 +26,6 @@ import mxnet as mx
 import time
 from tqdm import tqdm_notebook as tqdm
 
-from . import utils
 from . import bleu
 
 __all__ = ["get_length_index_fn", "evaluate", "translate",
@@ -90,7 +89,7 @@ def evaluate(model, data_loader, test_loss_function, translator, tgt_vocab, deto
     
     avg_loss = avg_loss / avg_loss_denom
     real_translation_out = [None for _ in range(len(all_inst_ids))]
-    
+
     for ind, sentence in zip(all_inst_ids, translation_out):
         real_translation_out[ind] = detokenizer(bleu._bpe_to_words(sentence),
                                                 return_str=True)
@@ -125,8 +124,8 @@ def translate(translator, src_seq, src_vocab, tgt_vocab, detokenizer, ctx):
     return real_translation_out              
 
 def train(model, train_data_loader, valid_data_loader, loss_function, trainer, translator,
-          tgt_vocab, val_tgt_sentences, detokenizer, save_dir, hparams, ctx):
-    
+          tgt_vocab, val_tgt_sentences, detokenizer, file_name, hparams, ctx):
+
     best_valid_bleu = 0.0
     train_data_loader_length = len(train_data_loader)
 
@@ -178,7 +177,7 @@ def train(model, train_data_loader, valid_data_loader, loss_function, trainer, t
                 log_wc = 0
 
         # Evaluate the losses on validation and test datasets and find the corresponding BLEU score and log it
-        valid_loss, valid_translation_out = utils.evaluate(
+        valid_loss, valid_translation_out = evaluate(
             model,
             valid_data_loader,
             loss_function,
@@ -187,7 +186,13 @@ def train(model, train_data_loader, valid_data_loader, loss_function, trainer, t
             detokenizer,
             ctx)
         
-        valid_bleu_score, _, _, _, _ = bleu.compute_bleu([val_tgt_sentences], valid_translation_out)
+        valid_bleu_score, _, _, _, _ = bleu.compute_bleu(
+            [val_tgt_sentences],
+            valid_translation_out,
+            tokenized=False,
+            tokenizer=hparams.bleu,
+            split_compound_word=False,
+            bpe=False)
         
         print("[Epoch {}] valid Loss={:.4f}, valid ppl={:.4f}, valid bleu={:.2f}"
                      .format(epoch_id, valid_loss, np.exp(valid_loss), valid_bleu_score * 100))
@@ -195,12 +200,11 @@ def train(model, train_data_loader, valid_data_loader, loss_function, trainer, t
         # Save the model if the BLEU score is better than the previous best
         if valid_bleu_score > best_valid_bleu:
             best_valid_bleu = valid_bleu_score
-            save_path = os.path.join(save_dir, "valid_best.params")
-            print("Save best parameters to {}".format(save_path))
-            model.save_parameters(save_path)
+            print("Save best parameters to {}".format(file_name))
+            model.save_parameters(file_name)
 
         # Update the learning rate based on the number of epochs that have passed
-        if epoch_id + 1 >= (epochs * 2) // 3:
+        if epoch_id + 1 >= (hparams.epochs * 2) // 3:
             new_lr = trainer.learning_rate * hparams.lr_update_factor
             print("Learning rate change to {}".format(new_lr))
             trainer.set_learning_rate(new_lr)
