@@ -24,7 +24,7 @@ import numpy as np
 import math
 import mxnet as mx
 import time
-from tqdm import tqdm
+from tqdm import tqdm_notebook as tqdm
 
 from . import utils
 from . import bleu
@@ -125,7 +125,7 @@ def translate(translator, src_seq, src_vocab, tgt_vocab, detokenizer, ctx):
     return real_translation_out              
 
 def train(model, train_data_loader, valid_data_loader, loss_function, trainer, translator,
-          tgt_vocab, detokenizer, save_dir, hparams, ctx):
+          tgt_vocab, val_tgt_sentences, detokenizer, save_dir, hparams, ctx):
     
     best_valid_bleu = 0.0
     train_data_loader_length = len(train_data_loader)

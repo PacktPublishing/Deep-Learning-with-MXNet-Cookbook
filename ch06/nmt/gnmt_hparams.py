@@ -12,9 +12,9 @@ bleu = '13a'
 # Hyper-parameters for training
 batch_size, test_batch_size = 64, 32
 num_buckets = 5
-epochs = 1
+epochs = 8
 clip = 5
 lr = 0.001
 lr_update_factor = 0.5
-log_interval = 10
+log_interval = 100
 save_dir = "gnmt_en_de_512"
