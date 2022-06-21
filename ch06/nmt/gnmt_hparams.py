@@ -26,12 +26,15 @@ dropout = 0.2
 beam_size = 10
 lp_alpha = 1.0
 lp_k = 5
-bleu = "13a"
+bleu = "tweaked"
+# BeamSearchSampler Maximum Length Search
+max_length = 150
 
 # Hyper-parameters for training
-batch_size, test_batch_size = 64, 32
+optimizer = "adam"
+batch_size, test_batch_size = 128, 64
 num_buckets = 5
-epochs = 8
+epochs = 12
 clip = 5
 lr = 0.001
 lr_update_factor = 0.5

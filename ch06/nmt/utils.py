@@ -23,10 +23,12 @@ import inspect
 import numpy as np
 import math
 import mxnet as mx
+import gluonnlp as nlp
 import time
 from tqdm import tqdm_notebook as tqdm
 
 from . import bleu
+from . import translation
 
 __all__ = ["get_length_index_fn", "evaluate", "translate",
            "train_one_epoch"]
@@ -123,11 +125,16 @@ def translate(translator, src_seq, src_vocab, tgt_vocab, detokenizer, ctx):
     
     return real_translation_out              
 
-def train(model, train_data_loader, valid_data_loader, loss_function, trainer, translator,
+def train(model, train_data_loader, valid_data_loader, loss_function, trainer,
           tgt_vocab, val_tgt_sentences, detokenizer, file_name, hparams, ctx):
 
     best_valid_bleu = 0.0
     train_data_loader_length = len(train_data_loader)
+    
+    # For evaluation
+    scorer=nlp.model.BeamSearchScorer(
+        alpha=hparams.lp_alpha,
+        K=hparams.lp_k)
 
     # Run through each epoch
     for epoch_id in tqdm(range(hparams.epochs)):
@@ -176,6 +183,12 @@ def train(model, train_data_loader, valid_data_loader, loss_function, trainer, t
                 log_avg_gnorm = 0
                 log_wc = 0
 
+        translator = translation.BeamSearchTranslator(
+            model=model,
+            beam_size=hparams.beam_size,
+            scorer=scorer,
+            max_length=hparams.max_length)
+
         # Evaluate the losses on validation and test datasets and find the corresponding BLEU score and log it
         valid_loss, valid_translation_out = evaluate(
             model,
@@ -208,3 +221,5 @@ def train(model, train_data_loader, valid_data_loader, loss_function, trainer, t
             new_lr = trainer.learning_rate * hparams.lr_update_factor
             print("Learning rate change to {}".format(new_lr))
             trainer.set_learning_rate(new_lr)
+            
+    return valid_loss, valid_translation_out
