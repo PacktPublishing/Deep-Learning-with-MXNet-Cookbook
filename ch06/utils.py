@@ -43,14 +43,27 @@ def process_words(
     
     words = nltk.tokenize.word_tokenize(text)
        
-    filtered_words_pre = []
     filtered_words_post = []
     
     for word in words:
         
         if word not in stop_words and word.isalpha():
-            filtered_words_pre.append(word)
             word = stemmer.stem(word)
+            filtered_words_post.append(lemmatizer.lemmatize(word))
+    
+    return filtered_words_post
+
+def process_words_basic(
+    text,
+    lemmatizer = lemmatizer):
+    
+    words = nltk.tokenize.word_tokenize(text)
+       
+    filtered_words_post = []
+    
+    for word in words:
+        
+        if word.isalpha():
             filtered_words_post.append(lemmatizer.lemmatize(word))
     
     return filtered_words_post
