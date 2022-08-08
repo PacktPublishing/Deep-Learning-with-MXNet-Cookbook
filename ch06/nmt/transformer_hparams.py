@@ -19,15 +19,15 @@
 
 # Transformer Hyper-Parameters
 num_units = 512
-num_hidden = 2048
-dropout = 0.1
+num_hidden = 1024
+dropout = 0.2
 epsilon = 0.1
-num_layers = 6
+num_layers = 4
 num_heads = 8
 scaled = True
 
-beam_size = 4
-lp_alpha = 0.6
+beam_size = 10
+lp_alpha = 1.0
 lp_k = 5
 # bleu = "13a"
 # BeamSearchSampler Maximum Length Search
@@ -35,15 +35,15 @@ max_length = 200
 
 # Hyper-parameters for training
 optimizer = "adam"
-epochs = 3
+epochs = 12
 batch_size = 128
 test_batch_size = 64
 num_accumulated = 1
-lr = 0.01
+lr = 0.0003
 lr_update_factor = 0.5
 clip = 5
 warmup_steps = 1
 file_name = "transformer_vi_en_512.params"
 average_start = 1
-num_buckets = 20
+num_buckets = 5
 log_interval = 100

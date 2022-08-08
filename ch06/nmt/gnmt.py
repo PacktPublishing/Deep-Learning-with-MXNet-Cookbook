@@ -133,8 +133,7 @@ class GNMTEncoder(Seq2SeqEncoder):
         """
         return super(GNMTEncoder, self).__call__(inputs, states, valid_length)
 
-    def forward(self, inputs, states=None, valid_length=None):  #pylint: disable=arguments-differ, missing-docstring
-        # TODO(sxjscience) Accelerate the forward using HybridBlock
+    def forward(self, inputs, states=None, valid_length=None):
         _, length, _ = inputs.shape
         new_states = []
         outputs = inputs

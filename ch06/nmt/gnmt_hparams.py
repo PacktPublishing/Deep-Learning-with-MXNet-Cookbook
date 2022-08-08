@@ -39,4 +39,4 @@ clip = 5
 lr = 0.001
 lr_update_factor = 0.5
 log_interval = 100
-file_name = "gnmt_en_de_512.params"
+file_name = "gnmt_vi_en_512.params"
