@@ -31,7 +31,7 @@ lp_alpha = 1.0
 lp_k = 5
 # bleu = "13a"
 # BeamSearchSampler Maximum Length Search
-max_length = 200
+max_length = 150
 
 # Hyper-parameters for training
 optimizer = "adam"
