@@ -14,12 +14,20 @@ random.seed(seed)
 np.random.seed(seed)
 mx.random.seed(seed)
 
-# Image Classification
+# Image Classification Kaggle Full
 KAGGLE_DOGS_CATS_FILE = "dogs-vs-cats.zip"
 EXTRACT_DOGS_CATS_FOLDER = "dogs-vs-cats"
 TOTAL_NUMBER_OF_IMAGES = 25000
 TOTAL_NUMBER_OF_IMAGES_PER_CLASS = 12500
 
+# Image Classification Kaggle Light (Zenodo)
+KAGGLE_DOGS_CATS_LIGHT_FILE = "cats_dogs_light.zip"
+EXTRACT_DOGS_CATS_LIGHT_FOLDER = "cats_dogs_light"
+TOTAL_NUMBER_OF_IMAGES_TRAIN_LIGHT = 1000
+TOTAL_NUMBER_OF_IMAGES_DOGS_TRAIN_LIGHT = 545
+TOTAL_NUMBER_OF_IMAGES_CATS_TRAIN_LIGHT = 455
+TOTAL_NUMBER_OF_IMAGES_DOGS_TEST_LIGHT = 200
+TOTAL_NUMBER_OF_IMAGES_CATS_TEST_LIGHT = 200
 
 def preprocess_kaggle_cats_vs_dogs(path, split_weights, random_seed=42):
     # Function that from the path to the dogs-vs-cats.zip file
@@ -83,12 +91,12 @@ def preprocess_kaggle_cats_vs_dogs(path, split_weights, random_seed=42):
     assert len(cat_train_files + cat_val_files + cat_test_files) == TOTAL_NUMBER_OF_IMAGES_PER_CLASS
     
     # Create Destination Folders
-    dog_train_path = os.path.join(extract_path, "train/dog")
-    cat_train_path = os.path.join(extract_path, "train/cat")
-    dog_val_path = os.path.join(extract_path, "val/dog")
-    cat_val_path = os.path.join(extract_path, "val/cat")
-    dog_test_path = os.path.join(extract_path, "test/dog")
-    cat_test_path = os.path.join(extract_path, "test/cat")
+    dog_train_path = os.path.join(train_path, "dog")
+    cat_train_path = os.path.join(train_path, "cat")
+    dog_val_path = os.path.join(val_path, "dog")
+    cat_val_path = os.path.join(val_path, "cat")
+    dog_test_path = os.path.join(test_path, "dog")
+    cat_test_path = os.path.join(test_path, "cat")
     
     os.makedirs(dog_train_path, exist_ok=True)
     os.makedirs(cat_train_path, exist_ok=True)
@@ -127,8 +135,112 @@ def preprocess_kaggle_cats_vs_dogs(path, split_weights, random_seed=42):
         src_file = os.path.join(train_path, f)
         dst_file = os.path.join(cat_test_path, f)
         shutil.move(src_file, dst_file)
+
+def preprocess_kaggle_cats_vs_dogs_light(path, split_weights, random_seed=42):
+    # Function that from the path to the cats_dogs_light.zip file
+    # downloaded from: https://zenodo.org/record/5226945#.Y9ZYCezP3VZ
+    # extracts images as a balanced split for train & val from the original training set
+    # Train+Val come from 1000 samples (500 per class)
+    # Test set fixed for 400 samples (200 per class)
+    
+    # Assert there are 2 elements in split weights array (train, val)
+    assert len(split_weights) == 2
+    
+     # Extract source file
+    file_path = os.path.join(path, KAGGLE_DOGS_CATS_LIGHT_FILE)
+    extract_path = os.path.join(path)
+    
+    # Paths for later
+    train_path = os.path.join(extract_path, EXTRACT_DOGS_CATS_LIGHT_FOLDER, "train")
+    val_path = os.path.join(extract_path, EXTRACT_DOGS_CATS_LIGHT_FOLDER, "val")
+    test_path = os.path.join(extract_path, EXTRACT_DOGS_CATS_LIGHT_FOLDER, "test")
+
+    with zipfile.ZipFile(file_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_path)
+
+    # After this step, 2 folders have been generated inside "cats_dogs_light" folder, "train" and "test"
+    # Inside each of these folders, there are other 2, "cats" and "dogs"
+
+    # 1st step is to move part of the training set to the validation set, in the "val" folder
+    train_val_image_files = [f for f in os.listdir(train_path)]
+    
+    dog_train_val_files = [f for f in train_val_image_files if f.startswith("dog")]
+    cat_train_val_files = [f for f in train_val_image_files if f.startswith("cat")]
+
+    # Verify download and extraction has gone well
+    assert len(train_val_image_files) == TOTAL_NUMBER_OF_IMAGES_TRAIN_LIGHT
+    assert len(dog_train_val_files) == TOTAL_NUMBER_OF_IMAGES_DOGS_TRAIN_LIGHT
+    assert len(cat_train_val_files) == TOTAL_NUMBER_OF_IMAGES_CATS_TRAIN_LIGHT
+
+    # Compute files to be moved to val folder, according to normalized split values
+    # Done separately for classes
+    dog_train_files, dog_val_files = train_test_split(dog_train_val_files,
+                                                      test_size=split_weights[1],
+                                                      random_state=random_seed)
+    cat_train_files, cat_val_files = train_test_split(cat_train_val_files,
+                                                      test_size=split_weights[1],
+                                                      random_state=random_seed)
+    
+    # Verify Number of files matches expectations
+    assert len(dog_train_files + dog_val_files) == TOTAL_NUMBER_OF_IMAGES_DOGS_TRAIN_LIGHT
+    assert len(cat_train_files + cat_val_files) == TOTAL_NUMBER_OF_IMAGES_CATS_TRAIN_LIGHT
+
+    # 2nd step is to re-order test set (for the right folders)
+    test_image_files = [f for f in os.listdir(test_path)]
+    
+    dog_test_files = [f for f in test_image_files if f.startswith("dog")]
+    cat_test_files = [f for f in test_image_files if f.startswith("cat")]
+
+    assert len(dog_test_files) == TOTAL_NUMBER_OF_IMAGES_DOGS_TEST_LIGHT
+    assert len(cat_test_files) == TOTAL_NUMBER_OF_IMAGES_CATS_TEST_LIGHT
+
+    # Create Destination Folders
+    dog_train_path = os.path.join(train_path, "dog")
+    cat_train_path = os.path.join(train_path, "cat")
+    dog_val_path = os.path.join(val_path, "dog")
+    cat_val_path = os.path.join(val_path, "cat")
+    dog_test_path = os.path.join(test_path, "dog")
+    cat_test_path = os.path.join(test_path, "cat")
+    
+    os.makedirs(dog_train_path, exist_ok=True)
+    os.makedirs(cat_train_path, exist_ok=True)
+    os.makedirs(dog_val_path, exist_ok=True)
+    os.makedirs(cat_val_path, exist_ok=True)
+    os.makedirs(dog_test_path, exist_ok=True)
+    os.makedirs(cat_test_path, exist_ok=True)
+    
+    # Move files as split
+    for f in dog_train_files:
+        src_file = os.path.join(train_path, f)
+        dst_file = os.path.join(dog_train_path, f)
+        shutil.move(src_file, dst_file)
         
-def generate_cats_vs_dogs_datasets(path, imageNet=False, image_size=224) -> (
+    for f in cat_train_files:
+        src_file = os.path.join(train_path, f)
+        dst_file = os.path.join(cat_train_path, f)
+        shutil.move(src_file, dst_file)
+
+    for f in dog_val_files:
+        src_file = os.path.join(train_path, f)
+        dst_file = os.path.join(dog_val_path, f)
+        shutil.move(src_file, dst_file)
+        
+    for f in cat_val_files:
+        src_file = os.path.join(train_path, f)
+        dst_file = os.path.join(cat_val_path, f)
+        shutil.move(src_file, dst_file)
+    
+    for f in dog_test_files:
+        src_file = os.path.join(test_path, f)
+        dst_file = os.path.join(dog_test_path, f)
+        shutil.move(src_file, dst_file)
+        
+    for f in cat_test_files:
+        src_file = os.path.join(test_path, f)
+        dst_file = os.path.join(cat_test_path, f)
+        shutil.move(src_file, dst_file)
+
+def generate_cats_vs_dogs_datasets(path, light=True, imageNet=False, image_size=224) -> (
     ImageFolderDataset,
     ImageFolderDataset,
     ImageFolderDataset):
@@ -138,6 +250,9 @@ def generate_cats_vs_dogs_datasets(path, imageNet=False, image_size=224) -> (
     
     # Paths
     extract_path = os.path.join(path, EXTRACT_DOGS_CATS_FOLDER)
+    if light:
+        extract_path = os.path.join(path, EXTRACT_DOGS_CATS_LIGHT_FOLDER)
+
     train_path = os.path.join(extract_path, "train")
     val_path = os.path.join(extract_path, "val")
     test_path = os.path.join(extract_path, "test")
@@ -215,4 +330,4 @@ def generate_class_dict_cats_vs_dogs_imagenet() -> dict:
 
 def rgb_to_gray(rgb):
     # Function that transforms an RGB colour image to grayscale
-    return np.dot(rgb[...,:3].asnumpy(), np.array([0.2989, 0.5870, 0.1140]))
+    return np.dot(rgb[..., :3].asnumpy(), np.array([0.2989, 0.5870, 0.1140]))
