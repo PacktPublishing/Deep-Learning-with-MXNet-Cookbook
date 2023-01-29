@@ -6,7 +6,9 @@ import os
 import random
 import shutil
 from sklearn.model_selection import train_test_split
+from typing import Tuple
 import zipfile
+
 
 # Set seed
 seed = 42
@@ -240,10 +242,10 @@ def preprocess_kaggle_cats_vs_dogs_light(path, split_weights, random_seed=42):
         dst_file = os.path.join(cat_test_path, f)
         shutil.move(src_file, dst_file)
 
-def generate_cats_vs_dogs_datasets(path, light=True, imageNet=False, image_size=224) -> (
+def generate_cats_vs_dogs_datasets(path, light=True, imageNet=False, image_size=224) -> Tuple[
     ImageFolderDataset,
     ImageFolderDataset,
-    ImageFolderDataset):
+    ImageFolderDataset]:
     # Function that from the path to the dogs-vs-cats.zip folder
     # (as generated from the function preprocess_kaggle_cats_vs_dogs)
     # Returns DataLoader for train, val & test datasets
@@ -283,10 +285,10 @@ def generate_cats_vs_dogs_datasets(path, light=True, imageNet=False, image_size=
     
     return train_dataset, val_dataset, test_dataset
     
-def generate_cats_vs_dogs_dataloaders(train_dataset, val_dataset, test_dataset, batch_size=128) -> (
+def generate_cats_vs_dogs_dataloaders(train_dataset, val_dataset, test_dataset, batch_size=128) -> Tuple[
     DataLoader,
     DataLoader,
-    DataLoader):
+    DataLoader]:
     # Function that from given datasets and batch size, computes the dataloaders
     
     # Create DataLoaders
