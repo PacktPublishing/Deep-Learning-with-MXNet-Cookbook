@@ -16,7 +16,7 @@ def create_alexnet_network(num_classes=2):
     # Returns AlexNet architecture, as defined in MXNet source code
     net = nn.Sequential()
     net.add(
-        nn.Conv2D(96, kernel_size=11, strides=4, activation='relu'),
+        nn.Conv2D(64, kernel_size=11, strides=4, activation='relu'),
         nn.MaxPool2D(pool_size=3, strides=2),
         nn.Conv2D(256, kernel_size=5, padding=2, activation='relu'),
         nn.MaxPool2D(pool_size=3, strides=2),
@@ -72,11 +72,6 @@ def training_loop(net, loss_fn, trainer, epochs, batch_size, training_set, valid
             
             current_loss = mx.np.mean(loss)            
             cumulative_loss += current_loss / num_training_batches
-            
-            XXXXXXX TO CHECK XXXXXXX
-            print(output.shape)
-            print(output)
-            exit()
             
             sigmoid_output = mx.nd.sigmoid(output.as_nd_ndarray())
             class_output = mx.nd.round(sigmoid_output)

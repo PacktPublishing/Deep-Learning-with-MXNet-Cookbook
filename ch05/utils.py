@@ -31,7 +31,17 @@ TOTAL_NUMBER_OF_IMAGES_CATS_TRAIN_LIGHT = 455
 TOTAL_NUMBER_OF_IMAGES_DOGS_TEST_LIGHT = 200
 TOTAL_NUMBER_OF_IMAGES_CATS_TEST_LIGHT = 200
 
-def preprocess_kaggle_cats_vs_dogs(path, split_weights, random_seed=42):
+def preprocess_kaggle_cats_vs_dogs(path, split_weights, light=True, random_seed=42):
+    # Helper function that provides access
+    # to pre-processing functions for the full or light versions
+    # of the cats vs dogs datasets
+    if light:
+        preprocess_kaggle_cats_vs_dogs_light(path, split_weights, random_seed)
+    else:
+        preprocess_kaggle_cats_vs_dogs_full(path, split_weights, random_seed)
+        
+    
+def preprocess_kaggle_cats_vs_dogs_full(path, split_weights, random_seed=42):
     # Function that from the path to the dogs-vs-cats.zip file
     # downloaded from: https://www.kaggle.com/c/dogs-vs-cats
     # Given the split percentages for training, validation and test sets
@@ -263,8 +273,6 @@ def generate_cats_vs_dogs_datasets(path, light=True, imageNet=False, image_size=
     train_dataset = ImageFolderDataset(train_path)
     val_dataset = ImageFolderDataset(val_path)
     test_dataset = ImageFolderDataset(test_path)
-    
-    transform_fn = mx.gluon.data.vision.transforms.ToTensor()
     
     if imageNet:
         transform_fn = mx.gluon.data.vision.transforms.Compose([
