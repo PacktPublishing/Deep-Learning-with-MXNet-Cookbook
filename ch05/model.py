@@ -95,7 +95,7 @@ def training_loop(net, loss_fn, trainer, epochs, batch_size, training_set, valid
             current_val_loss = mx.np.mean(val_loss)
             cumulative_val_loss += current_val_loss / num_validation_batches
             
-            # Accuracy (Need to apply sigmoif function which is included in loss, not in model).
+            # Accuracy (Need to apply sigmoid function which is included in loss, not in model).
             # This is to improve numerical stability.
             # Moreover, needs some change in the type of the arrays to work properly with metrics
             sigmoid_output = mx.nd.sigmoid(output.as_nd_ndarray())
