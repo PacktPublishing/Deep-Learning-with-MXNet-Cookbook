@@ -6,6 +6,9 @@ import random
 # Numpy Semantics
 mx.npx.set_np()
 
+# Local Libraries
+import utils
+
 # Set seed
 seed = 42
 random.seed(seed)
@@ -13,6 +16,7 @@ np.random.seed(seed)
 mx.random.seed(seed)
 
 MODEL_FILE_NAME = "resnet50.params"
+CLASSES_DICT = utils.generate_class_dict_cats_vs_dogs_imagenet()
 
 def training_loop(net, loss_fn, trainer, epochs, batch_size, training_set, validation_set, ctx = mx.gpu()):
     # Training Loop, saving best model
@@ -48,8 +52,10 @@ def training_loop(net, loss_fn, trainer, epochs, batch_size, training_set, valid
             current_loss = mx.np.mean(loss)            
             cumulative_loss += current_loss / num_training_batches
             
-            sigmoid_output = mx.nd.sigmoid(output.as_nd_ndarray())
-            class_output = mx.nd.round(sigmoid_output)
+            # sigmoid_output = mx.nd.sigmoid(output.as_nd_ndarray())
+            # class_output = mx.nd.round(sigmoid_output)
+            softmax_output = mx.nd.softmax(output.as_nd_ndarray())
+            class_output = np.argmax(softmax_output, axis=1)    
             train_acc.update(label, class_output)
             
         tr_acc_value = train_acc.get()[1]
@@ -66,15 +72,13 @@ def training_loop(net, loss_fn, trainer, epochs, batch_size, training_set, valid
             
             val_loss = loss_fn(output, label)
             
-            #current_val_loss = mx.np.mean(val_loss).asscalar()
             current_val_loss = mx.np.mean(val_loss)
             cumulative_val_loss += current_val_loss / num_validation_batches
             
-            # Accuracy (Need to apply sigmoif function which is included in loss, not in model).
-            # This is to improve numerical stability.
-            # Moreover, needs some change in the type of the arrays to work properly with metrics
-            sigmoid_output = mx.nd.sigmoid(output.as_nd_ndarray())
-            class_output = mx.nd.round(sigmoid_output)
+            # sigmoid_output = mx.nd.sigmoid(output.as_nd_ndarray())
+            # class_output = mx.nd.round(sigmoid_output)
+            softmax_output = mx.nd.softmax(output.as_nd_ndarray())
+            class_output = np.argmax(softmax_output, axis=1)
             val_acc.update(label, class_output)
             
         val_acc_value = val_acc.get()[1]
