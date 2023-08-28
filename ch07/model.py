@@ -51,11 +51,11 @@ def training_loop(net, loss_fn, trainer, epochs, batch_size, training_set, valid
             
             current_loss = mx.np.mean(loss)            
             cumulative_loss += current_loss / num_training_batches
-            
-            # sigmoid_output = mx.nd.sigmoid(output.as_nd_ndarray())
-            # class_output = mx.nd.round(sigmoid_output)
-            softmax_output = mx.nd.softmax(output.as_nd_ndarray())
-            class_output = np.argmax(softmax_output, axis=1)    
+
+            # No need to compute softmax output,
+            # the class with the larger value is the selected one
+            # softmax_output = mx.nd.softmax(output.as_nd_ndarray())
+            class_output = np.argmax(output, axis=1)    
             train_acc.update(label, class_output)
             
         tr_acc_value = train_acc.get()[1]
@@ -75,10 +75,10 @@ def training_loop(net, loss_fn, trainer, epochs, batch_size, training_set, valid
             current_val_loss = mx.np.mean(val_loss)
             cumulative_val_loss += current_val_loss / num_validation_batches
             
-            # sigmoid_output = mx.nd.sigmoid(output.as_nd_ndarray())
-            # class_output = mx.nd.round(sigmoid_output)
-            softmax_output = mx.nd.softmax(output.as_nd_ndarray())
-            class_output = np.argmax(softmax_output, axis=1)
+            # No need to compute softmax output,
+            # the class with the larger value is the selected one
+            # softmax_output = mx.nd.softmax(output.as_nd_ndarray())
+            class_output = np.argmax(output, axis=1) 
             val_acc.update(label, class_output)
             
         val_acc_value = val_acc.get()[1]
