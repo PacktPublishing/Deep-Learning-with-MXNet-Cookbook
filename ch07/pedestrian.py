@@ -31,9 +31,11 @@ COCO_PERSON_CLASS = 15
 
 class PedestrianDataset(mx.gluon.data.Dataset):
     """A custom dataset class to load the pedestrian dataset."""
-    def __init__(self, path, is_segmentation_task=False):
+    def __init__(self, path, is_segmentation_task=False, invert_masks=False, npx=False):
         self.path = path
         self.is_segmentation_task = is_segmentation_task
+        self.invert_masks = invert_masks
+        self.npx = npx
         self.features, self.labels, self.masks = self.process_pedestrian()
         number_pedestrians = sum([len(label) for label in self.labels])
         print("Read " + str(len(self.features)) + " images with " + str(number_pedestrians) + " pedestrians")
@@ -43,11 +45,10 @@ class PedestrianDataset(mx.gluon.data.Dataset):
             return (self.features[idx],
                     self.labels[idx])
         else:
-            return (self.features[idx],
-                    self.masks[idx])
+            return self.features[idx], self.masks[idx]
 
     def __len__(self):
-        return len(self.features)
+        return len(self.labels)
                         
     def process_pedestrian(self):
         """
@@ -101,6 +102,10 @@ class PedestrianDataset(mx.gluon.data.Dataset):
             # Image processing
             image_path = os.path.join(image_folder, image_file)
             image = mx.image.imread(image_path)
+
+            # Image dims
+            # (H, W, 3)
+            
             images.append(image)
             
             # BBoxes processing
@@ -120,10 +125,15 @@ class PedestrianDataset(mx.gluon.data.Dataset):
             mask_path = os.path.join(mask_folder, mask_file_name)
             # Gray-scale images: flag=0
             mask_image = mx.image.imread(mask_path, flag=0)
-            
-            assert mx.nd.max(mask_image) == len(annotations)
-            
-            seg_mask = PedestrianDataset.process_mask(mask_image)
+
+            if self.npx:
+                assert mx.np.max(mask_image) == len(annotations)
+            else:
+                assert mx.nd.max(mask_image) == len(annotations)
+
+            # Mask Dim
+            # (H, W, 1)
+            seg_mask = self.process_mask(mask_image)
             seg_masks.append(seg_mask)            
 
         return images, bboxes, seg_masks
@@ -162,9 +172,8 @@ class PedestrianDataset(mx.gluon.data.Dataset):
                 bboxes.append(bbox)
 
         return bboxes
-    
-    @staticmethod
-    def process_mask(mask):
+
+    def process_mask(self, mask):
         """
         Function that from an instance segmentation mask
         read from disk, with shape (H, W, 1), with different ids,
@@ -173,8 +182,12 @@ class PedestrianDataset(mx.gluon.data.Dataset):
         ready to use with GluonCV functions
         """
         seg_mask = mask.copy()
-        seg_mask = (seg_mask != 0)
-        seg_mask = mx.nd.moveaxis(seg_mask, -1, 0)
+        if self.invert_masks:
+            seg_mask = (seg_mask != 0)
+            if self.npx:
+                seg_mask = mx.np.moveaxis(seg_mask, -1, 0)
+            else:
+                seg_mask = mx.nd.moveaxis(seg_mask, -1, 0)
         return seg_mask
     
     @staticmethod
@@ -219,7 +232,7 @@ class PedestrianDataset(mx.gluon.data.Dataset):
     @staticmethod
     def process_model_mask(model_mask):
         """
-        Function that from the output of a GluonCV pre-trained
+        Function that from the output of a GluonCV COCO-pretrained
         semantic segmentation model, with shape (1, N, H, W),
         with N being the number of objects detected.
         returns a semantic segmentation mask with shape (1, H, W),
