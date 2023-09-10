@@ -25,15 +25,28 @@ IMAGE_FOLDER = "PNGImages"
 ANNOTATION_FOLDER = "Annotation"
 MASK_FOLDER = "PedMasks"
 PEDESTRIAN_IMAGES = 170
+INDEXES = {
+    "train": [  0, 120],
+    "val"  : [120, 145],
+    "test" : [145, 170]
+}
+NUMBER_IMAGES = {
+    "train": 120,
+    "val"  :  25,
+    "test" :  25
+}
 
+# Classes defined in https://github.com/dmlc/gluon-cv/blob/master/gluoncv/data/mscoco/segmentation.py
 COCO_PERSON_CLASS = 15
 
 
 class PedestrianDataset(mx.gluon.data.Dataset):
     """A custom dataset class to load the pedestrian dataset."""
-    def __init__(self, path, is_segmentation_task=False, invert_masks=False, npx=False):
+    def __init__(self, path, split, is_segmentation_task=False, invert_masks=False, npx=False):
         self.path = path
         self.is_segmentation_task = is_segmentation_task
+        self.indexes = INDEXES[split]
+        self.number_images = NUMBER_IMAGES[split]
         self.invert_masks = invert_masks
         self.npx = npx
         self.features, self.labels, self.masks = self.process_pedestrian()
@@ -42,13 +55,12 @@ class PedestrianDataset(mx.gluon.data.Dataset):
 
     def __getitem__(self, idx):
         if not self.is_segmentation_task:
-            return (self.features[idx],
-                    self.labels[idx])
+            return (self.features[idx], self.labels[idx])
         else:
-            return self.features[idx], self.masks[idx]
+            return (self.features[idx], self.masks[idx])
 
     def __len__(self):
-        return len(self.labels)
+        return self.number_images
                         
     def process_pedestrian(self):
         """
@@ -58,7 +70,7 @@ class PedestrianDataset(mx.gluon.data.Dataset):
         if not os.path.isdir(os.path.join(self.path, EXTRACT_PEDESTRIAN_FOLDER)):
             self.preprocess_pedestrian()
 
-        return self.generate_pedestrian_test_dataset()
+        return self.generate_pedestrian_dataset()
 
     def preprocess_pedestrian(self):
         """
@@ -74,7 +86,7 @@ class PedestrianDataset(mx.gluon.data.Dataset):
         with zipfile.ZipFile(file_path, 'r') as zip_ref:
             zip_ref.extractall(extract_path) 
     
-    def generate_pedestrian_test_dataset(self):
+    def generate_pedestrian_dataset(self):
         """
         Function that from the path to the pedestrian.zip folder
         (as generated from the function preprocess_pedestrian)
@@ -95,9 +107,13 @@ class PedestrianDataset(mx.gluon.data.Dataset):
 
         # Verify download and extraction has gone well
         assert len(image_files) == PEDESTRIAN_IMAGES
+
+        # Split selected
+        sorted_image_files = sorted(image_files)[self.indexes[0]:self.indexes[1]]
+        assert len(sorted_image_files) == self.number_images
             
         images, bboxes = [], []
-        for image_file in image_files:
+        for image_file in sorted_image_files:
             
             # Image processing
             image_path = os.path.join(image_folder, image_file)
@@ -182,8 +198,9 @@ class PedestrianDataset(mx.gluon.data.Dataset):
         ready to use with GluonCV functions
         """
         seg_mask = mask.copy()
+        # From instances to masks
+        seg_mask = (seg_mask != 0)
         if self.invert_masks:
-            seg_mask = (seg_mask != 0)
             if self.npx:
                 seg_mask = mx.np.moveaxis(seg_mask, -1, 0)
             else:
