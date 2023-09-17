@@ -36,7 +36,8 @@ max_length = 150
 # Hyper-parameters for training
 optimizer = "adam"
 epochs = 12
-batch_size = 128
+# batch_size = 128
+batch_size = 256
 test_batch_size = 64
 num_accumulated = 1
 lr = 0.0003
