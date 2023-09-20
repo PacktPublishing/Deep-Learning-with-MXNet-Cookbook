@@ -197,9 +197,11 @@ def compute_bleu(reference_corpus_list, translation_corpus, tokenized=True,
     precision_numerators = [0 for _ in range(max_n)]
     precision_denominators = [0 for _ in range(max_n)]
     ref_length, trans_length = 0, 0
+    
     for references in reference_corpus_list:
         assert len(references) == len(translation_corpus), \
             'The number of translations and their references do not match'
+    
     if tokenized:
         assert isinstance(reference_corpus_list[0][0], LIST_TYPES) and \
                isinstance(translation_corpus[0], LIST_TYPES), \
@@ -210,6 +212,7 @@ def compute_bleu(reference_corpus_list, translation_corpus, tokenized=True,
                isinstance(translation_corpus[0], six.string_types), \
             'references and translation should have format of list(list(str)) ' \
             'and list(str), respectively, when tokenized is False.'
+    
     for references, translation in zip(zip(*reference_corpus_list), translation_corpus):
         if not tokenized:
             references = [TOKENIZERS[tokenizer](reference).split() for reference in references]
@@ -223,8 +226,10 @@ def compute_bleu(reference_corpus_list, translation_corpus, tokenized=True,
         if lower_case:
             references = [[w.lower() for w in reference] for reference in references]
             translation = [w.lower() for w in translation]
+        
         trans_len = len(translation)
         trans_length += trans_len
+        
         ref_length += _closest_ref_length(references, trans_len)
         for n in range(max_n):
             matches, candidates = _compute_precision(references, translation, n + 1)

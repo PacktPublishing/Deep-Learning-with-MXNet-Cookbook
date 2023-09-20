@@ -147,25 +147,3 @@ def translate_with_unk(
              max_score_sample[i][1:(sample_valid_length[i] - 1)]])
         
     return translation_out
-
-def create_vocab(dataset):
-    # Create Vocab src and tgt instances
-    # given a Translation Dataset
-    src_vocab_words = []
-    tgt_vocab_words = []
-    for sentence_pair in tqdm(dataset):
-        src_sentence = sentence_pair[0]
-        tgt_sentence = sentence_pair[1]
-        src_words = src_sentence.split()
-        tgt_words = tgt_sentence.split()
-        src_vocab_words += src_words
-        tgt_vocab_words += tgt_words
-
-    src_counter = nlp.data.count_tokens(src_vocab_words)
-    src_vocab = nlp.Vocab(src_counter)
-
-    tgt_counter = nlp.data.count_tokens(tgt_vocab_words)
-    tgt_vocab = nlp.Vocab(tgt_counter)
-
-    return src_vocab, tgt_vocab    
-    

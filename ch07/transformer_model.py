@@ -28,6 +28,8 @@ import nmt
 import nmt.transformer_hparams as hparams
 from tqdm.notebook import tqdm
 
+TOKENS_TO_FILTER = ["<unk>", "<unk>."]
+
 def get_length_index_fn():
     global idx
     idx = 0
@@ -40,6 +42,41 @@ def get_length_index_fn():
 
 def get_data_lengths(dataset):
     return list(dataset.transform(lambda srg, tgt: (len(srg), len(tgt))))
+
+def compute_loss(model, data_loader, test_loss_function, context):
+    """Evaluate given the data loader
+
+    Parameters
+    ----------
+    data_loader : DataLoader
+
+    Returns
+    -------
+    avg_loss : float
+        Average loss
+    """
+    avg_loss_denom = 0
+    avg_loss = 0.0
+    
+    for _, (src_seq, tgt_seq, src_valid_length, tgt_valid_length) \
+            in enumerate(tqdm(data_loader)):
+        src_seq = src_seq.as_in_context(context)
+        tgt_seq = tgt_seq.as_in_context(context)
+        src_valid_length = src_valid_length.as_in_context(context)
+        tgt_valid_length = tgt_valid_length.as_in_context(context)
+        
+        # Calculating Loss
+        out, _ = model(src_seq, tgt_seq[:, :-1], src_valid_length, tgt_valid_length - 1)
+        loss = test_loss_function(out, tgt_seq[:, 1:], tgt_valid_length - 1).mean().asscalar()
+        avg_loss += loss * (tgt_seq.shape[1] - 1)
+        avg_loss_denom += (tgt_seq.shape[1] - 1)
+
+    # Calculate the average loss and initialize a None-filled translation list
+    avg_loss = avg_loss / avg_loss_denom
+
+    # Return the loss
+    return avg_loss
+
 
 def evaluate(model, data_loader, test_loss_function, translator, tgt_vocab, detokenizer, context):
     """Evaluate given the data loader
@@ -111,13 +148,28 @@ def translate(translator, src_seq, src_vocab, tgt_vocab, detokenizer, ctx):
     
     sample_valid_length = sample_valid_length[:, 0].asnumpy()
     translation_out = []
+    
     for i in range(max_score_sample.shape[0]):
         translation_out.append(
             [tgt_vocab.idx_to_token[ele] for ele in
              max_score_sample[i][1:(sample_valid_length[i] - 1)]])
     real_translation_out = [None for _ in range(len(translation_out))]
+    
     for ind, sentence in enumerate(translation_out):
-        real_translation_out[ind] = detokenizer(nmt.bleu._bpe_to_words(sentence),
-                                                return_str=True)
+        translation = detokenizer(
+             nmt.bleu._bpe_to_words(sentence),
+             return_str=False)
+        
+        # Filter sentences
+        remove_tokens = []
+        for word in translation:
+            if word in TOKENS_TO_FILTER:
+                remove_tokens.append(word)
+        
+        for token in remove_tokens:
+            translation.remove(token)
+
+        real_translation_out[ind] = translation
+    
     return real_translation_out              
                 

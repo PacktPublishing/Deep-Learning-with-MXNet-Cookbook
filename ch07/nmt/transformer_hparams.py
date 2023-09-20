@@ -47,4 +47,4 @@ warmup_steps = 1
 file_name = "transformer_vi_en_512.params"
 average_start = 1
 num_buckets = 5
-log_interval = 100
+log_interval = 1000
