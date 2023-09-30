@@ -5,8 +5,6 @@ import random
 from tqdm.notebook import tqdm
 from mxnet.contrib import amp
 
-# Local Libraries
-import utils
 
 # Disable Numpy Semantics
 mx.npx.reset_np()
