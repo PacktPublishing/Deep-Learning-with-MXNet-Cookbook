@@ -55,9 +55,9 @@ class PedestrianDataset(mx.gluon.data.Dataset):
 
     def __getitem__(self, idx):
         if not self.is_segmentation_task:
-            return (self.features[idx], self.labels[idx])
+            return (self.features[idx], self.labels[idx], idx)
         else:
-            return (self.features[idx], self.masks[idx])
+            return (self.features[idx], self.masks[idx], idx)
 
     def __len__(self):
         return self.number_images
