@@ -41,7 +41,7 @@ def get_length_index_fn():
     return transform
 
 def get_data_lengths(dataset):
-    return list(dataset.transform(lambda srg, tgt: (len(srg), len(tgt))))
+    return list(dataset.transform(lambda src, tgt: (len(src), len(tgt))))
 
 def compute_loss(model, data_loader, test_loss_function, context):
     """Evaluate given the data loader
