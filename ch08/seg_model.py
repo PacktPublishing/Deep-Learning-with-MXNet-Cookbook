@@ -162,7 +162,10 @@ def multi_training_loop(model, loss_fn, trainer, epochs, batch_size, training_se
         
     return training_loss, validation_loss
 
-def training_loop_opt(model, loss_fn, trainer, epochs, batch_size, training_set, validation_set, model_filename, ctx):
+def training_loop_opt(model, loss_fn, trainer, epochs, batch_size, training_set, validation_set, model_filename, ctx_list):
+    # Verify context is a list
+    assert type(ctx_list) == list
+    
     # Training Loop, saving best model
     training_loss, validation_loss = [], []
     min_val_loss = float('inf')
@@ -182,14 +185,20 @@ def training_loop_opt(model, loss_fn, trainer, epochs, batch_size, training_set,
         tr_loss = 0.0
         
         # inner loop
-        for data_list, label_list in training_data_iterator:
+        for data, label in training_data_iterator:
+            data_list   = mx.gluon.utils.split_and_load(data, ctx_list=ctx_list)
+            label_list  = mx.gluon.utils.split_and_load(label.squeeze(), ctx_list=ctx_list)
             
             with mx.autograd.record():                
                 outputs = [model(data_slice) for data_slice in data_list]
-                losses = [loss_fn(output[0], label_slice.squeeze()) for output, label_slice in zip(outputs, label_list)]
+                losses = [loss_fn(output[0], label_slice) for output, label_slice in zip(outputs, label_list)]
 
-            for loss in losses:
-                loss.backward()
+#                 for loss in losses:
+#                     with amp.scale_loss(loss, trainer) as scaled_loss:
+#                         scaled_loss.backward()
+            
+                with amp.scale_loss(losses, trainer) as scaled_losses:
+                    mx.autograd.backward(scaled_losses)
         
             trainer.step(batch_size)
 
@@ -199,10 +208,12 @@ def training_loop_opt(model, loss_fn, trainer, epochs, batch_size, training_set,
         # Validation Loss
         val_loss = 0.0
 
-        for data_list, label_list in validation_data_iterator:
+        for data, label in validation_data_iterator:
+            data_list   = mx.gluon.utils.split_and_load(data, ctx_list=ctx_list)
+            label_list  = mx.gluon.utils.split_and_load(label.squeeze(), ctx_list=ctx_list)
 
             outputs = [model(data_slice) for data_slice in data_list]
-            losses = [loss_fn(output[0], label_slice.squeeze()) for output, label_slice in zip(outputs, label_list)]
+            losses = [loss_fn(output[0], label_slice) for output, label_slice in zip(outputs, label_list)]
             
             current_val_loss = sum([l.sum().asscalar() / batch_size for l in losses])
             val_loss += current_val_loss / num_validation_batches
