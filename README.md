@@ -1,3 +1,6 @@
+
+<b><p align='center'>[![Packt Sale](https://static.packt-cdn.com/assets/images/packt+events/Improve_UX.png)](https://packt.link/algotradingpython)</p></b> 
+
 # Deep Learning with MXNet Cookbook
 
 <a href="https://www.packtpub.com/product/deep-learning-with-mxnet-cookbook/9781800569607?utm_source=github&utm_medium=repository&utm_campaign=9781805125266"><img src="https://content.packt.com/B16591/cover_image_small.jpg" alt="" height="256px" align="right"></a>
