@@ -1,5 +1,3 @@
-<p align='center'><a href='https://www.eventbrite.com/e/ship-production-pytorch-system-in-a-day-train-optimize-deploy-workshop-tickets-1983348934052?aff=GitHub'><img src='https://static.packt-cdn.com/assets/images/packt+events/workshop_ashish_github.png'/></a></p>
-
 # Deep Learning with MXNet Cookbook
 
 <a href="https://www.packtpub.com/product/deep-learning-with-mxnet-cookbook/9781800569607?utm_source=github&utm_medium=repository&utm_campaign=9781805125266"><img src="https://content.packt.com/B16591/cover_image_small.jpg" alt="" height="256px" align="right"></a>
